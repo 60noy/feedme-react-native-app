@@ -1,4 +1,4 @@
-/* eslint-disable camelcase */
+/* eslint-disable camelcase, no-debugger */
 import React, { Component } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { Actions } from 'react-native-router-flux'
@@ -6,7 +6,7 @@ import axios from 'axios'
 import { Slider, Button } from 'react-native-elements'
 import LoaderSpin from 'react-native-spinkit'
 import { red } from '../../utils/colors'
-import { NEARBY_PLACES_BASE_URL, PLACE_PHOTO_BASE_URL, PLACE_DETAILS_BASE_URL } from '../../utils/constants'
+import { NEARBY_PLACES_BASE_URL, PLACE_PHOTO_BASE_URL } from '../../utils/constants'
 // TODO: user palette from material colors
 // TODO: add status - e.g 'you must be hungry' for 1km distance
 
@@ -47,15 +47,19 @@ class Home extends Component {
       distance: 10,
       isLoading: false,
       test: 'test',
-      latitude: 4,
+      latitude: 0,
       longitude: 0,
       error: null,
+      data: [],
     }
   }
-  componentDidMount() {
+  componentWillMount() {
+    this.getLocationToState()
+  }
+
+  getLocationToState = () => {
     navigator.geolocation.watchPosition(
       (position) => {
-        console.log(`okay${position}`)
         this.setState({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
@@ -66,49 +70,52 @@ class Home extends Component {
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000, distanceFilter: 10 },
     )
   }
-  // updates distance state on slider value change
-  handleSliderChange = (distance) => {
-    this.setState({ distance })
-  }
 
-  //
-  searchRestaurants = () => {
+
+  getNearbyRestsDataPromise = () => {
     const { distance, latitude, longitude } = this.state
     const radius = distance * 1000 // 1km = 1000m
     const url = `${NEARBY_PLACES_BASE_URL}&radius=${radius}&location=${latitude},${longitude}`
-    console.log(url)
-    axios.get(url)
-    .then((response) => { this.openCardsPage(response.data) })
-    .catch((error) => { console.error(error) })
-    // call fetch
-    // push router with props of restaurants
     this.setState({ isLoading: true })
-  }
-  openCardsPage = (data) => {
-    console.log(`data: ${JSON.stringify(data)}`)
-    const results = data.results.map(item => ({
-      id: item.place_id,
-      // image: this.photoDataToImage(item.photos[0].image).then(image => image),
-      // TODO: return the data from image promise after uncommit
-      imageUrl: 'https://lh3.googleusercontent.com/p/AF1QipOQeNnuchvBNedMBGv8qysC__il-UYEZFWI23WQ=s1600-w400',
-      name: item.name,
-      rating: item.rating,
-      types: item.types,
-    }))
-    // debugger // eslint-disable-line no-debugger
-    this.setState({ isLoading: false, test: `${results[0]}a` })
-    Actions.cards(results)
+    return axios.get(url)
+    .then(response =>
+      // debugger
+       response.data.results.map(item =>
+        // const image = this.photoDataToImage(item.photos[0].image).then((im) => {})
+        ({
+          id: item.place_id,
+          // photo: this.photoDataToImage(item.photos[0].image),
+          // photo: this.photoDataToImage(item.photos[0].image),
+          // TODO: return the data from image promise after uncommit
+          imageUrl: 'https://lh3.googleusercontent.com/p/AF1QipOQeNnuchvBNedMBGv8qysC__il-UYEZFWI23WQ=s1600-w400',
+          name: item.name,
+          rating: item.rating,
+          types: item.types,
+        }),
+    ))
+    .catch((error) => { console.error(error) })
   }
 
-  restDataToRestDetailsPromise = restData => axios.get(`${PLACE_DETAILS_BASE_URL}&place_id=${restData.place_id}`)
-    .catch((error) => { this.setState({ error }) })
+  searchRests = () => {
+    const restsData = this.getNearbyRestsDataPromise()
+    restsData.then((data) => {
+      this.setState({ data, isLoading: false })
+      Actions.cards({ data })
+    })
+  // debugger // eslint-disable-line no-debugger
+  // imageUrl: this.photoDataToImagePromise(rest.photos[0]),
+  }
+
   // photo data object to image
-  photoDataToImage = (photo) => {
+  photoDataToImagePromise = (photo) => {
     const { width, height, photo_reference } = photo
     const url = `${PLACE_PHOTO_BASE_URL}&maxwidth=${width}&maxheight=${height}&photoreference=${photo_reference}`
     return axios.get(url)
-    .then(img => img)
     .catch((err) => { this.setState({ error: `error fetching image${err}` }) })
+  }
+  // updates distance state on slider value change
+  handleSliderChange = (distance) => {
+    this.setState({ distance })
   }
   render() {
     const { distance, isLoading } = this.state
@@ -137,13 +144,16 @@ class Home extends Component {
           <Text style={styles.distance}>
             {distance} km
           </Text>
+          <Text>
+            {this.state.error}
+          </Text>
         </View>
         <View style={styles.getFoodBtn}>
           {!isLoading &&
           <Button
             raised
             backgroundColor={red}
-            onPress={this.searchRestaurants}
+            onPress={this.searchRests}
             title="GET ME FOOD"
           />
         }

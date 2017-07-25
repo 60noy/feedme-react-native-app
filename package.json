@@ -18,11 +18,15 @@
     "eslint-plugin-react": "7.0.1",
     "googleplaces": "^0.6.1",
     "material-colors": "^1.2.5",
+    "native-base": "^2.3.0",
+    "prop-types": "^15.5.10",
+    "randomcolor": "^0.5.3",
     "react": "16.0.0-alpha.12",
     "react-native": "0.46.4",
     "react-native-elements": "^0.15.0",
     "react-native-router-flux": "^4.0.0-beta.12",
     "react-native-spinkit": "^1.0.3",
+    "react-native-swipe-cards": "^0.1.0",
     "react-native-vector-icons": "^4.2.0"
   },
   "devDependencies": {

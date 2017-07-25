@@ -1,24 +1,38 @@
-import React from 'react'
-import { View, Text } from 'react-native'
+import React, { Component } from 'react'
+import { View } from 'react-native'
+import PropTypes from 'prop-types'
+import SwipeCards from './components/SwipeCards'
 
-const RestaurantCards = () => (
-  <View>
-    <CardsDector>
-      {data.map((card) =>
-        <Card
-          name={card.name}
-          imageUrl={card.imageUrl}
-          rating={card.rating}
-          p
-      )}
-    </CardsDector>
-    <Text />
-  </View>
-  // <CardView
-  //   image={cards.image}
-  //   title={cards.title}
-  //   desciption={cards.description}
-  // />
-)
+class RestaurantCards extends Component { // eslint-disable-line react/prefer-stateless-function
+  render() {
+    return (
+      <View>
+        {/* <Text> */}
+        {/* {this.props.data.length} */}
+        {/* </Text> */}
+        <SwipeCards data={this.props.data} />
+
+      </View>
+    )
+  }
+
+}
+RestaurantCards.propTypes = {
+  data: PropTypes.arrayOf(PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    imageUrl: PropTypes.string.isRequired,
+    types: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+  }).isRequired).isRequired,
+}
 
 export default RestaurantCards
+
+
+// { /* {data.map((card) =>
+//         <Card
+//           name={card.name}
+//           imageUrl={card.imageUrl}
+//           rating={card.rating}
+//           p
+//       )}
+// </CardsDector> */ }
